@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Panel de Administrador</title>
+    <style>
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { position: relative; margin: 10% auto; padding: 2rem; width: 90%; max-width: 500px; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white p-8 font-sans">
-    <h1 class="text-3xl font-bold text-yellow-400 mb-6">Panel de Administrador - Clientes Registrados</h1>
-    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
+    <!-- BARRA SUPERIOR Y TABLA DE CLIENTES (EXISTENTE) -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-yellow-400">Panel de Administrador</h1>
+        <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+    </div>
+    <h2 class="text-2xl font-bold mb-4">Clientes Registrados</h2>
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg mb-10">
         <table class="min-w-full">
             <thead>
                 <tr class="bg-gray-700">
@@ -16,18 +25,60 @@
                     <th class="py-3 px-4 text-left">Nombre</th>
                     <th class="py-3 px-4 text-left">DNI</th>
                     <th class="py-3 px-4 text-left">Usuario</th>
-                    <th class="py-3 px-4 text-left">Fecha Nacimiento</th>
-                    <th class="py-3 px-4 text-left">Teléfono</th>
-                    <th class="py-3 px-4 text-left">Correo Electrónico</th>
                 </tr>
             </thead>
             <tbody id="clientes-table-body">
-                <!-- Las filas de los clientes se insertarán aquí con JavaScript -->
+                <!-- Las filas de los clientes se insertarán aquí -->
             </tbody>
         </table>
     </div>
 
-    <!-- ESTA ES LA LÍNEA QUE FALTABA -->
+    <hr class="my-10 border-gray-700">
+
+    <!-- NUEVA SECCIÓN: GESTIONAR JUEGOS -->
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Gestionar Juegos</h2>
+        <button id="add-game-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Nuevo Juego</button>
+    </div>
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-gray-700">
+                    <th class="py-3 px-4 text-left">ID</th>
+                    <th class="py-3 px-4 text-left">Nombre Juego</th>
+                    <th class="py-3 px-4 text-left">Descripción</th>
+                    <th class="py-3 px-4 text-left">Disponible</th>
+                    <th class="py-3 px-4 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="juegos-table-body">
+                <!-- Las filas de los juegos se insertarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MODAL PARA AÑADIR/EDITAR JUEGO -->
+    <div id="game-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 id="game-modal-title" class="text-2xl font-bold mb-4 text-yellow-400">Añadir Juego</h3>
+            <form id="game-form">
+                <input type="hidden" id="game-id-input">
+                <div class="mb-4">
+                    <label for="nombre_juego" class="block text-sm font-medium">Nombre del Juego</label>
+                    <input type="text" id="nombre_juego" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required>
+                </div>
+                <div class="mb-6">
+                    <label for="descripcion" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="descripcion" rows="3" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"></textarea>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-game-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="./admin-renderer.js"></script>
 </body>
 </html>

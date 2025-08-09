@@ -33,17 +33,24 @@ function createLoginWindow() {
     loginWindow.loadFile('login.html');
 }
 
-function createDashboardWindow() {
+function createDashboardWindow(clientData) { // AHORA ACEPTA DATOS DEL CLIENTE
     const dashboardWindow = new BrowserWindow({
-        width: 1200, height: 800,
+        width: 1200,
+        height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
     dashboardWindow.loadFile('dashboard.html');
+    
+    // Una vez que la ventana esté lista, le enviamos los datos del cliente
+    dashboardWindow.webContents.on('did-finish-load', () => {
+        dashboardWindow.webContents.send('client-data', clientData);
+    });
 }
 
 function createAdminDashboardWindow() {
     const adminWindow = new BrowserWindow({
-        width: 1200, height: 800,
+        width: 1200,
+        height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
     adminWindow.loadFile('admin_dashboard.html');
@@ -74,7 +81,7 @@ ipcMain.on('registrar-cliente', (event, cliente) => {
     });
 });
 
-// INICIO DE SESIÓN
+// INICIO DE SESIÓN (ACTUALIZADO para enviar datos del cliente)
 ipcMain.on('login-request', (event, credenciales) => {
     const { usuario, contrasena } = credenciales;
     if (usuario === ADMIN_USER && contrasena === ADMIN_PASS) {
@@ -89,7 +96,8 @@ ipcMain.on('login-request', (event, credenciales) => {
             return;
         }
         if (results.length > 0) {
-            createDashboardWindow();
+            const clientData = { id: results[0].id, nombre: results[0].nombre };
+            createDashboardWindow(clientData); // Pasamos los datos al crear la ventana
             BrowserWindow.fromWebContents(event.sender)?.close();
         } else {
             event.reply('login-response', { success: false, message: 'Usuario o contraseña incorrectos.' });
@@ -109,37 +117,72 @@ ipcMain.on('get-all-clients', (event) => {
     });
 });
 
-
-// ESCUCHADOR PARA CERRAR SESIÓN (CORREGIDO Y CON MÁS DEPURACIÓN)
+// CERRAR SESIÓN
 ipcMain.on('logout-request', (event) => {
-    console.log('[MAIN PROCESS]: Petición "logout-request" recibida.');
-    
     const windowToClose = BrowserWindow.fromWebContents(event.sender);
-    
     if (windowToClose) {
-        console.log('[MAIN PROCESS]: Ventana encontrada. Cerrando ventana actual...');
         windowToClose.close();
-        console.log('[MAIN PROCESS]: Creando nueva ventana de login...');
         createLoginWindow();
-    } else {
-        console.error('[MAIN PROCESS]: No se pudo encontrar la ventana para cerrar.');
     }
+});
+
+
+// --- NUEVOS ESCUCHADORES PARA LA FASE 1 ---
+
+// OBTENER JUEGOS DISPONIBLES
+ipcMain.on('get-available-games', (event) => {
+    const query = 'SELECT * FROM juegos WHERE disponible = TRUE';
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al obtener juegos:', err);
+            return;
+        }
+        event.reply('available-games-response', results);
+    });
+});
+
+// OBTENER RESERVAS DE UN CLIENTE ESPECÍFICO
+ipcMain.on('get-my-reservas', (event, clienteId) => {
+    const query = `
+        SELECT r.id, r.fecha_reserva, r.hora_reserva, r.estado, j.nombre_juego 
+        FROM reservas r 
+        JOIN juegos j ON r.juego_id = j.id 
+        WHERE r.cliente_id = ?
+        ORDER BY r.id DESC`;
+    connection.query(query, [clienteId], (err, results) => {
+        if (err) {
+            console.error('Error al obtener mis reservas:', err);
+            return;
+        }
+        event.reply('my-reservas-response', results);
+    });
+});
+
+// CREAR UNA NUEVA RESERVA
+ipcMain.on('create-reservation', (event, reserva) => {
+    const query = 'INSERT INTO reservas (cliente_id, juego_id, fecha_reserva, hora_reserva) VALUES (?, ?, ?, ?)';
+    const values = [reserva.cliente_id, reserva.juego_id, reserva.fecha_reserva, reserva.hora_reserva];
+    connection.query(query, values, (err, result) => {
+        if (err) {
+            console.error('Error al crear la reserva:', err);
+            event.reply('reservation-response', { success: false, message: 'Error al crear la reserva.' });
+            return;
+        }
+        event.reply('reservation-response', { success: true, message: '¡Reserva creada con éxito!' });
+    });
 });
 
 
 // --- Ciclo de Vida de la Aplicación ---
 app.whenReady().then(createLoginWindow);
-
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         connection.end();
         app.quit();
     }
 });
-
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createLoginWindow();
     }
 });
-// primera version

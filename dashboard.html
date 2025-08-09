@@ -5,22 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Casino Royale - Dashboard</title>
+    <style>
+        /* Estilos para el modal */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            position: relative;
+            margin: 15% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-white font-sans">
-    <div class="w-full p-4 flex justify-end">
+    <!-- BARRA SUPERIOR -->
+    <div class="w-full p-4 flex justify-between items-center bg-gray-800 shadow-lg">
+        <h1 id="welcome-message" class="text-xl font-bold text-yellow-400">¡Bienvenido!</h1>
         <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
             Cerrar Sesión
         </button>
     </div>
-    <div class="flex flex-col items-center justify-center pt-16">
-        <div class="text-center">
-            <h1 class="text-4xl font-bold text-yellow-400">¡Bienvenido!</h1>
-            <p class="mt-2 text-lg text-gray-300">Sesión iniciada correctamente.</p>
-            <p class="mt-8">Aquí irá la funcionalidad para reservar juegos.</p>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container mx-auto p-8">
+        <!-- SECCIÓN DE JUEGOS DISPONIBLES -->
+        <h2 class="text-3xl font-bold mb-6">Juegos Disponibles</h2>
+        <div id="juegos-disponibles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Las tarjetas de los juegos se insertarán aquí -->
+        </div>
+
+        <hr class="my-10 border-gray-700">
+
+        <!-- SECCIÓN DE MIS RESERVAS -->
+        <h2 class="text-3xl font-bold mb-6">Mis Reservas</h2>
+        <div id="mis-reservas" class="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="py-3 px-4 text-left">Juego</th>
+                        <th class="py-3 px-4 text-left">Fecha</th>
+                        <th class="py-3 px-4 text-left">Hora</th>
+                        <th class="py-3 px-4 text-left">Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="reservas-table-body">
+                    <!-- Las filas de las reservas se insertarán aquí -->
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Script para manejar el botón de logout -->
+    <!-- MODAL PARA CREAR RESERVA -->
+    <div id="reserva-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4 text-yellow-400">Confirmar Reserva</h3>
+            <form id="reserva-form">
+                <input type="hidden" id="juego-id-input">
+                <div class="mb-4">
+                    <label for="fecha-reserva" class="block mb-2 text-sm font-medium">Fecha</label>
+                    <input type="text" id="fecha-reserva" placeholder="DD/MM/AAAA" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required>
+                </div>
+                <div class="mb-6">
+                    <label for="hora-reserva" class="block mb-2 text-sm font-medium">Hora</label>
+                    <input type="text" id="hora-reserva" placeholder="HH:MM" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-reserva-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Reservar</button>
+                </div>
+            </form>
+            <div id="modal-mensaje" class="mt-4 text-center"></div>
+        </div>
+    </div>
+
     <script src="./dashboard-renderer.js"></script>
 </body>
 </html>
