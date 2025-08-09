@@ -1,17 +1,19 @@
 // main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const mysql = require('mysql2');
-const path = require('path'); // Importamos 'path' para unir rutas de forma segura
+const path = require('path');
 
-// --- CREDENCIALES DEL ADMINISTRADOR (Hardcodeado) ---
+// --- 1. IMPORTAR MODELOS Y CONTROLADORES (RUTA CORREGIDA) ---
+const createGameModel = require('./src/models/gameModel.js');
+const setupGameController = require('./src/controllers/gameController.js');
+
+// --- CREDENCIALES Y CONEXIÓN A DB ---
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin123';
-
-// --- Configuración de la Conexión a MySQL ---
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '12345678', // Contraseña actualizada
+    password: '12345678',
     database: 'casino_db'
 });
 
@@ -23,30 +25,28 @@ connection.connect(err => {
     console.log('Conexión a la base de datos MySQL establecida.');
 });
 
-// --- Creación de Ventanas (RUTAS ACTUALIZADAS) ---
+// --- 2. INICIALIZAR MODELOS Y CONTROLADORES ---
+// Creamos una instancia del modelo de juegos, pasándole la conexión a la DB.
+const gameModel = createGameModel(connection);
+// Activamos el controlador de juegos, pasándole ipcMain y el modelo.
+setupGameController(ipcMain, gameModel);
+
+
+// --- Creación de Ventanas (Rutas actualizadas) ---
 function createLoginWindow() {
     const loginWindow = new BrowserWindow({
-        width: 500,
-        height: 600,
-        webPreferences: { 
-            nodeIntegration: true, 
-            contextIsolation: false,
-            // Preload script si fuera necesario en el futuro
-            // preload: path.join(__dirname, 'preload.js') 
-        }
+        width: 500, height: 600,
+        webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    // Usamos path.join para crear la ruta correcta sin importar el sistema operativo
     loginWindow.loadFile(path.join(__dirname, 'src/views/login.html'));
 }
 
 function createDashboardWindow(clientData) {
     const dashboardWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1200, height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
     dashboardWindow.loadFile(path.join(__dirname, 'src/views/dashboard.html'));
-    
     dashboardWindow.webContents.on('did-finish-load', () => {
         dashboardWindow.webContents.send('client-data', clientData);
     });
@@ -54,16 +54,18 @@ function createDashboardWindow(clientData) {
 
 function createAdminDashboardWindow() {
     const adminWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1200, height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
     adminWindow.loadFile(path.join(__dirname, 'src/views/admin_dashboard.html'));
 }
 
 
-// --- Lógica de Comunicación IPC (Sin cambios por ahora) ---
-// ... (Todo tu código de ipcMain.on(...) se queda igual por el momento)
+// --- Lógica de Comunicación IPC (Ahora más limpia) ---
+
+// NOTA: Todos los ipcMain.on relacionados con juegos han sido eliminados de aquí
+// y ahora son manejados por 'gameController.js'.
+
 // REGISTRO DE CLIENTE
 ipcMain.on('registrar-cliente', (event, cliente) => {
     const query = 'INSERT INTO clientes (nombre, dni, usuario, contrasena, fecha_nacimiento, telefono, correo_electronico) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -130,15 +132,8 @@ ipcMain.on('logout-request', (event) => {
 
 
 // --- ESCUCHADORES PARA LA VISTA DEL CLIENTE ---
-
-// OBTENER JUEGOS DISPONIBLES
-ipcMain.on('get-available-games', (event) => {
-    const query = 'SELECT * FROM juegos WHERE disponible = TRUE';
-    connection.query(query, (err, results) => {
-        if (err) { console.error('Error al obtener juegos:', err); return; }
-        event.reply('available-games-response', results);
-    });
-});
+// (Por ahora, estos se quedan aquí. En el futuro, podríamos crear
+// un 'reservaModel' y 'reservaController' para ellos).
 
 // OBTENER RESERVAS DE UN CLIENTE
 ipcMain.on('get-my-reservas', (event, clienteId) => {
@@ -154,16 +149,12 @@ ipcMain.on('get-my-reservas', (event, clienteId) => {
     });
 });
 
-// CREAR UNA NUEVA RESERVA (ACTUALIZADO PARA GUARDAR PEDIDOS)
+// CREAR UNA NUEVA RESERVA
 ipcMain.on('create-reservation', (event, reserva) => {
     const query = 'INSERT INTO reservas (cliente_id, juego_id, fecha_reserva, hora_reserva, pedido_comidas, pedido_bebidas) VALUES (?, ?, ?, ?, ?, ?)';
     const values = [
-        reserva.cliente_id, 
-        reserva.juego_id, 
-        reserva.fecha_reserva, 
-        reserva.hora_reserva,
-        reserva.pedido_comidas,
-        reserva.pedido_bebidas
+        reserva.cliente_id, reserva.juego_id, reserva.fecha_reserva, 
+        reserva.hora_reserva, reserva.pedido_comidas, reserva.pedido_bebidas
     ];
     connection.query(query, values, (err, result) => {
         if (err) {

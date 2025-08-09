@@ -11,11 +11,13 @@
     </style>
 </head>
 <body class="bg-gray-900 text-white p-8 font-sans">
-    <!-- BARRA SUPERIOR Y TABLA DE CLIENTES (EXISTENTE) -->
+    <!-- BARRA SUPERIOR -->
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-yellow-400">Panel de Administrador</h1>
         <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
     </div>
+
+    <!-- TABLA DE CLIENTES -->
     <h2 class="text-2xl font-bold mb-4">Clientes Registrados</h2>
     <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg mb-10">
         <table class="min-w-full">
@@ -25,6 +27,7 @@
                     <th class="py-3 px-4 text-left">Nombre</th>
                     <th class="py-3 px-4 text-left">DNI</th>
                     <th class="py-3 px-4 text-left">Usuario</th>
+                    <th class="py-3 px-4 text-left">Correo Electrónico</th>
                 </tr>
             </thead>
             <tbody id="clientes-table-body">
@@ -35,7 +38,7 @@
 
     <hr class="my-10 border-gray-700">
 
-    <!-- NUEVA SECCIÓN: GESTIONAR JUEGOS -->
+    <!-- SECCIÓN: GESTIONAR JUEGOS -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold">Gestionar Juegos</h2>
         <button id="add-game-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Nuevo Juego</button>

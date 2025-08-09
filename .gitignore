@@ -1,2 +1,4 @@
+# Solo es para subirlo a GitHub
+# Ignorar archivos y carpetas innecesarios
 /node_modules
 .env
