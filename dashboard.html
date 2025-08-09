@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Casino Royale - Dashboard</title>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="w-full p-4 flex justify-end">
+        <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+            Cerrar Sesión
+        </button>
+    </div>
+    <div class="flex flex-col items-center justify-center pt-16">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-yellow-400">¡Bienvenido!</h1>
+            <p class="mt-2 text-lg text-gray-300">Sesión iniciada correctamente.</p>
+            <p class="mt-8">Aquí irá la funcionalidad para reservar juegos.</p>
+        </div>
+    </div>
+
+    <!-- Script para manejar el botón de logout -->
+    <script src="./dashboard-renderer.js"></script>
+</body>
+</html>

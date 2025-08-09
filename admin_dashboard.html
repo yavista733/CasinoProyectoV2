@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Panel de Administrador</title>
+</head>
+<body class="bg-gray-900 text-white p-8 font-sans">
+    <h1 class="text-3xl font-bold text-yellow-400 mb-6">Panel de Administrador - Clientes Registrados</h1>
+    <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-gray-700">
+                    <th class="py-3 px-4 text-left">ID</th>
+                    <th class="py-3 px-4 text-left">Nombre</th>
+                    <th class="py-3 px-4 text-left">DNI</th>
+                    <th class="py-3 px-4 text-left">Usuario</th>
+                    <th class="py-3 px-4 text-left">Fecha Nacimiento</th>
+                    <th class="py-3 px-4 text-left">Teléfono</th>
+                    <th class="py-3 px-4 text-left">Correo Electrónico</th>
+                </tr>
+            </thead>
+            <tbody id="clientes-table-body">
+                <!-- Las filas de los clientes se insertarán aquí con JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ESTA ES LA LÍNEA QUE FALTABA -->
+    <script src="./admin-renderer.js"></script>
+</body>
+</html>
