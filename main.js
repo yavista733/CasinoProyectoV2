@@ -1,7 +1,7 @@
 // main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const mysql = require('mysql2');
-const path = require('path');
+const path = require('path'); // Importamos 'path' para unir rutas de forma segura
 
 // --- CREDENCIALES DEL ADMINISTRADOR (Hardcodeado) ---
 const ADMIN_USER = 'admin';
@@ -23,14 +23,20 @@ connection.connect(err => {
     console.log('Conexión a la base de datos MySQL establecida.');
 });
 
-// --- Creación de Ventanas ---
+// --- Creación de Ventanas (RUTAS ACTUALIZADAS) ---
 function createLoginWindow() {
     const loginWindow = new BrowserWindow({
         width: 500,
         height: 600,
-        webPreferences: { nodeIntegration: true, contextIsolation: false }
+        webPreferences: { 
+            nodeIntegration: true, 
+            contextIsolation: false,
+            // Preload script si fuera necesario en el futuro
+            // preload: path.join(__dirname, 'preload.js') 
+        }
     });
-    loginWindow.loadFile('login.html');
+    // Usamos path.join para crear la ruta correcta sin importar el sistema operativo
+    loginWindow.loadFile(path.join(__dirname, 'src/views/login.html'));
 }
 
 function createDashboardWindow(clientData) {
@@ -39,7 +45,7 @@ function createDashboardWindow(clientData) {
         height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    dashboardWindow.loadFile('dashboard.html');
+    dashboardWindow.loadFile(path.join(__dirname, 'src/views/dashboard.html'));
     
     dashboardWindow.webContents.on('did-finish-load', () => {
         dashboardWindow.webContents.send('client-data', clientData);
@@ -52,12 +58,12 @@ function createAdminDashboardWindow() {
         height: 800,
         webPreferences: { nodeIntegration: true, contextIsolation: false }
     });
-    adminWindow.loadFile('admin_dashboard.html');
+    adminWindow.loadFile(path.join(__dirname, 'src/views/admin_dashboard.html'));
 }
 
 
-// --- Lógica de Comunicación IPC ---
-
+// --- Lógica de Comunicación IPC (Sin cambios por ahora) ---
+// ... (Todo tu código de ipcMain.on(...) se queda igual por el momento)
 // REGISTRO DE CLIENTE
 ipcMain.on('registrar-cliente', (event, cliente) => {
     const query = 'INSERT INTO clientes (nombre, dni, usuario, contrasena, fecha_nacimiento, telefono, correo_electronico) VALUES (?, ?, ?, ?, ?, ?, ?)';
