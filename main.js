@@ -11,7 +11,7 @@ const ADMIN_PASS = 'admin123';
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '12345678', // Reemplaza con tu contraseña
+    password: '12345678', // Contraseña actualizada
     database: 'casino_db'
 });
 
@@ -33,7 +33,7 @@ function createLoginWindow() {
     loginWindow.loadFile('login.html');
 }
 
-function createDashboardWindow(clientData) { // AHORA ACEPTA DATOS DEL CLIENTE
+function createDashboardWindow(clientData) {
     const dashboardWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -41,7 +41,6 @@ function createDashboardWindow(clientData) { // AHORA ACEPTA DATOS DEL CLIENTE
     });
     dashboardWindow.loadFile('dashboard.html');
     
-    // Una vez que la ventana esté lista, le enviamos los datos del cliente
     dashboardWindow.webContents.on('did-finish-load', () => {
         dashboardWindow.webContents.send('client-data', clientData);
     });
@@ -81,7 +80,7 @@ ipcMain.on('registrar-cliente', (event, cliente) => {
     });
 });
 
-// INICIO DE SESIÓN (ACTUALIZADO para enviar datos del cliente)
+// INICIO DE SESIÓN
 ipcMain.on('login-request', (event, credenciales) => {
     const { usuario, contrasena } = credenciales;
     if (usuario === ADMIN_USER && contrasena === ADMIN_PASS) {
@@ -97,7 +96,7 @@ ipcMain.on('login-request', (event, credenciales) => {
         }
         if (results.length > 0) {
             const clientData = { id: results[0].id, nombre: results[0].nombre };
-            createDashboardWindow(clientData); // Pasamos los datos al crear la ventana
+            createDashboardWindow(clientData);
             BrowserWindow.fromWebContents(event.sender)?.close();
         } else {
             event.reply('login-response', { success: false, message: 'Usuario o contraseña incorrectos.' });
@@ -109,10 +108,7 @@ ipcMain.on('login-request', (event, credenciales) => {
 ipcMain.on('get-all-clients', (event) => {
     const query = 'SELECT id, nombre, dni, usuario, fecha_nacimiento, telefono, correo_electronico FROM clientes';
     connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Error al obtener los clientes:', err);
-            return;
-        }
+        if (err) { console.error('Error al obtener los clientes:', err); return; }
         event.reply('all-clients-response', results);
     });
 });
@@ -127,21 +123,18 @@ ipcMain.on('logout-request', (event) => {
 });
 
 
-// --- NUEVOS ESCUCHADORES PARA LA FASE 1 ---
+// --- ESCUCHADORES PARA LA VISTA DEL CLIENTE ---
 
 // OBTENER JUEGOS DISPONIBLES
 ipcMain.on('get-available-games', (event) => {
     const query = 'SELECT * FROM juegos WHERE disponible = TRUE';
     connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Error al obtener juegos:', err);
-            return;
-        }
+        if (err) { console.error('Error al obtener juegos:', err); return; }
         event.reply('available-games-response', results);
     });
 });
 
-// OBTENER RESERVAS DE UN CLIENTE ESPECÍFICO
+// OBTENER RESERVAS DE UN CLIENTE
 ipcMain.on('get-my-reservas', (event, clienteId) => {
     const query = `
         SELECT r.id, r.fecha_reserva, r.hora_reserva, r.estado, j.nombre_juego 
@@ -150,18 +143,22 @@ ipcMain.on('get-my-reservas', (event, clienteId) => {
         WHERE r.cliente_id = ?
         ORDER BY r.id DESC`;
     connection.query(query, [clienteId], (err, results) => {
-        if (err) {
-            console.error('Error al obtener mis reservas:', err);
-            return;
-        }
+        if (err) { console.error('Error al obtener mis reservas:', err); return; }
         event.reply('my-reservas-response', results);
     });
 });
 
-// CREAR UNA NUEVA RESERVA
+// CREAR UNA NUEVA RESERVA (ACTUALIZADO PARA GUARDAR PEDIDOS)
 ipcMain.on('create-reservation', (event, reserva) => {
-    const query = 'INSERT INTO reservas (cliente_id, juego_id, fecha_reserva, hora_reserva) VALUES (?, ?, ?, ?)';
-    const values = [reserva.cliente_id, reserva.juego_id, reserva.fecha_reserva, reserva.hora_reserva];
+    const query = 'INSERT INTO reservas (cliente_id, juego_id, fecha_reserva, hora_reserva, pedido_comidas, pedido_bebidas) VALUES (?, ?, ?, ?, ?, ?)';
+    const values = [
+        reserva.cliente_id, 
+        reserva.juego_id, 
+        reserva.fecha_reserva, 
+        reserva.hora_reserva,
+        reserva.pedido_comidas,
+        reserva.pedido_bebidas
+    ];
     connection.query(query, values, (err, result) => {
         if (err) {
             console.error('Error al crear la reserva:', err);
@@ -169,6 +166,15 @@ ipcMain.on('create-reservation', (event, reserva) => {
             return;
         }
         event.reply('reservation-response', { success: true, message: '¡Reserva creada con éxito!' });
+    });
+});
+
+// CANCELAR RESERVA
+ipcMain.on('cancel-reservation', (event, reservaId) => {
+    const query = "UPDATE reservas SET estado = 'cancelada' WHERE id = ?";
+    connection.query(query, [reservaId], (err, result) => {
+        if (err) { console.error('Error al cancelar la reserva:', err); return; }
+        event.reply('reservation-cancelled');
     });
 });
 
