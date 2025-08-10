@@ -107,11 +107,21 @@ ipcMain.on('login-request', (event, credenciales) => {
     });
 });
 
-// OBTENER TODOS LOS CLIENTES
+// OBTENER TODOS LOS CLIENTES (ACTUALIZADO CON JOIN)
 ipcMain.on('get-all-clients', (event) => {
-    const query = 'SELECT id, nombre, dni, usuario, fecha_nacimiento, telefono, correo_electronico FROM clientes';
+    const query = `
+        SELECT 
+            c.id, c.nombre, c.dni, c.usuario, c.correo_electronico,
+            cat.nombre_categoria
+        FROM clientes c
+        LEFT JOIN categorias_cliente cat ON c.categoria_id = cat.id
+        ORDER BY c.id;
+    `;
     connection.query(query, (err, results) => {
-        if (err) { console.error('Error al obtener los clientes:', err); return; }
+        if (err) { 
+            console.error('Error al obtener los clientes con categoría:', err); 
+            return; 
+        }
         event.reply('all-clients-response', results);
     });
 });
@@ -127,8 +137,6 @@ ipcMain.on('logout-request', (event) => {
 
 
 // --- ESCUCHADORES PARA LA VISTA DEL CLIENTE ---
-
-// OBTENER RESERVAS DE UN CLIENTE
 ipcMain.on('get-my-reservas', (event, clienteId) => {
     const query = `
         SELECT r.id, r.fecha_reserva, r.hora_reserva, r.estado, j.nombre_juego 
@@ -142,7 +150,6 @@ ipcMain.on('get-my-reservas', (event, clienteId) => {
     });
 });
 
-// CREAR UNA NUEVA RESERVA
 ipcMain.on('create-reservation', (event, reserva) => {
     const query = 'INSERT INTO reservas (cliente_id, juego_id, fecha_reserva, hora_reserva, pedido_comidas, pedido_bebidas) VALUES (?, ?, ?, ?, ?, ?)';
     const values = [
@@ -159,7 +166,6 @@ ipcMain.on('create-reservation', (event, reserva) => {
     });
 });
 
-// CANCELAR RESERVA
 ipcMain.on('cancel-reservation', (event, reservaId) => {
     const query = "UPDATE reservas SET estado = 'cancelada' WHERE id = ?";
     connection.query(query, [reservaId], (err, result) => {
@@ -169,11 +175,8 @@ ipcMain.on('cancel-reservation', (event, reservaId) => {
 });
 
 
-// --- NUEVO ESCUCHADOR PARA EL PANEL DE ADMIN ---
-
-// OBTENER TODAS LAS RESERVAS PARA EL ADMIN
+// --- ESCUCHADORES PARA EL PANEL DE ADMIN ---
 ipcMain.on('get-all-reservas-admin', (event) => {
-    // Esta consulta une las 3 tablas para obtener toda la información necesaria
     const query = `
         SELECT 
             r.id, r.fecha_reserva, r.hora_reserva, r.estado, r.pedido_comidas, r.pedido_bebidas,
@@ -190,6 +193,31 @@ ipcMain.on('get-all-reservas-admin', (event) => {
             return;
         }
         event.reply('all-reservas-admin-response', results);
+    });
+});
+
+// NUEVO: OBTENER TODAS LAS CATEGORÍAS
+ipcMain.on('get-all-categories', (event) => {
+    const query = 'SELECT * FROM categorias_cliente ORDER BY id';
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al obtener las categorías:', err);
+            return;
+        }
+        event.reply('all-categories-response', results);
+    });
+});
+
+// NUEVO: ACTUALIZAR LA CATEGORÍA DE UN CLIENTE
+ipcMain.on('update-client-category', (event, data) => {
+    const { clienteId, categoriaId } = data;
+    const query = 'UPDATE clientes SET categoria_id = ? WHERE id = ?';
+    connection.query(query, [categoriaId, clienteId], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar la categoría del cliente:', err);
+            return;
+        }
+        event.reply('client-updated'); // Avisar para que se refresque la lista de clientes
     });
 });
 

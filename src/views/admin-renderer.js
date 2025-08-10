@@ -1,7 +1,7 @@
 // src/views/admin-renderer.js
 const { ipcRenderer } = require('electron');
 
-// --- DATOS DEL MENÚ (Copiado de dashboard-renderer para interpretar los pedidos) ---
+// --- DATOS DEL MENÚ ---
 const MENU = {
     bebidas: [
         { id: 'b1', nombre: 'Pisco Sour' }, { id: 'b2', nombre: 'Chilcano' },
@@ -22,7 +22,7 @@ const juegosTableBody = document.getElementById('juegos-table-body');
 const allReservasTableBody = document.getElementById('all-reservas-table-body');
 const addGameBtn = document.getElementById('add-game-btn');
 
-// Elementos del Modal de Juegos
+// Modal de Juegos
 const gameModal = document.getElementById('game-modal');
 const gameModalTitle = document.getElementById('game-modal-title');
 const gameForm = document.getElementById('game-form');
@@ -31,16 +31,20 @@ const gameIdInput = document.getElementById('game-id-input');
 const nombreJuegoInput = document.getElementById('nombre_juego');
 const descripcionInput = document.getElementById('descripcion');
 
-// Elementos de las Pestañas
+// NUEVO: Modal de Categorías
+const categoryModal = document.getElementById('category-modal');
+const categoryForm = document.getElementById('category-form');
+const clientIdInput = document.getElementById('client-id-input');
+const clientNameModal = document.getElementById('client-name-modal');
+const categorySelect = document.getElementById('category-select');
+const cancelCategoryBtn = document.getElementById('cancel-category-btn');
+
+// Pestañas
 const tabs = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
 
 // --- FUNCIONES DE RENDERIZADO ---
-function renderClientes(clientes) { /* ... (código sin cambios) ... */ }
-function renderJuegos(juegos) { /* ... (código sin cambios) ... */ }
-function renderAllReservas(reservas) { /* ... (código sin cambios) ... */ }
-// (Pega aquí tus funciones de renderizado que ya funcionan)
 function renderClientes(clientes) {
     clientesTableBody.innerHTML = '';
     if (!clientes || clientes.length === 0) return;
@@ -52,12 +56,20 @@ function renderClientes(clientes) {
             <td class="py-2 px-4">${cliente.nombre}</td>
             <td class="py-2 px-4">${cliente.dni}</td>
             <td class="py-2 px-4">${cliente.usuario}</td>
-            <td class="py-2 px-4">${cliente.correo_electronico || 'No especificado'}</td>
+            <td class="py-2 px-4 font-semibold">${cliente.nombre_categoria || 'Normal'}</td>
+            <td class="py-2 px-4">
+                <button data-id="${cliente.id}" data-nombre="${cliente.nombre}" class="change-category-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-3 rounded-lg">
+                    Cambiar
+                </button>
+            </td>
         `;
         clientesTableBody.appendChild(row);
     });
 }
 
+function renderJuegos(juegos) { /* ... (código sin cambios) ... */ }
+function renderAllReservas(reservas) { /* ... (código sin cambios) ... */ }
+// (Pega aquí tus funciones renderJuegos y renderAllReservas que ya funcionan)
 function renderJuegos(juegos) {
     juegosTableBody.innerHTML = '';
     if (!juegos || juegos.length === 0) return;
@@ -125,25 +137,24 @@ function renderAllReservas(reservas) {
 
 
 // --- LÓGICA DE PESTAÑAS ---
+function switchTab(targetId) { /* ... (código sin cambios) ... */ }
+tabs.forEach(tab => { /* ... (código sin cambios) ... */ });
+// (Pega aquí tu lógica de pestañas que ya funciona)
 function switchTab(targetId) {
-    // Ocultar todos los contenidos
     tabContents.forEach(content => {
         content.style.display = 'none';
     });
-    // Quitar la clase activa de todas las pestañas
     tabs.forEach(tab => {
         tab.classList.remove('active-tab');
     });
 
-    // Mostrar el contenido de la pestaña seleccionada
     document.getElementById(`content-${targetId}`).style.display = 'block';
-    // Añadir la clase activa a la pestaña seleccionada
     document.getElementById(`tab-${targetId}`).classList.add('active-tab');
 }
 
 tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-        const targetId = tab.id.replace('tab-', ''); // "tab-clientes" -> "clientes"
+        const targetId = tab.id.replace('tab-', '');
         switchTab(targetId);
     });
 });
@@ -151,12 +162,9 @@ tabs.forEach(tab => {
 
 // --- PETICIONES INICIALES Y ESTADO INICIAL ---
 window.addEventListener('DOMContentLoaded', () => {
-    // Pedir todos los datos al cargar
     ipcRenderer.send('get-all-clients');
     ipcRenderer.send('get-all-reservas-admin');
     ipcRenderer.send('get-all-games-admin');
-
-    // Mostrar la primera pestaña (Clientes) por defecto
     switchTab('clientes');
 });
 
@@ -166,12 +174,57 @@ ipcRenderer.on('all-clients-response', (event, clientes) => renderClientes(clien
 ipcRenderer.on('all-reservas-admin-response', (event, reservas) => renderAllReservas(reservas));
 ipcRenderer.on('all-games-admin-response', (event, juegos) => renderJuegos(juegos));
 ipcRenderer.on('game-updated', () => ipcRenderer.send('get-all-games-admin'));
+ipcRenderer.on('client-updated', () => ipcRenderer.send('get-all-clients')); // Refrescar clientes
 
 
 // --- MANEJO DE EVENTOS DE LA INTERFAZ ---
-// (Pega aquí el resto de tu código de manejo de eventos que ya funciona)
 logoutButton.addEventListener('click', () => ipcRenderer.send('logout-request'));
 
+// NUEVO: Abrir modal para cambiar categoría
+clientesTableBody.addEventListener('click', e => {
+    if (e.target && e.target.classList.contains('change-category-btn')) {
+        const clientId = e.target.getAttribute('data-id');
+        const clientName = e.target.getAttribute('data-nombre');
+
+        // Llenar el modal con la info del cliente
+        clientIdInput.value = clientId;
+        clientNameModal.textContent = clientName;
+
+        // Pedir la lista de categorías disponibles
+        ipcRenderer.send('get-all-categories');
+    }
+});
+
+// NUEVO: Llenar el select y mostrar el modal cuando lleguen las categorías
+ipcRenderer.on('all-categories-response', (event, categorias) => {
+    categorySelect.innerHTML = ''; // Limpiar opciones previas
+    categorias.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.nombre_categoria;
+        categorySelect.appendChild(option);
+    });
+    categoryModal.style.display = 'block'; // Mostrar el modal
+});
+
+// NUEVO: Enviar formulario de cambio de categoría
+categoryForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const data = {
+        clienteId: clientIdInput.value,
+        categoriaId: categorySelect.value
+    };
+    ipcRenderer.send('update-client-category', data);
+    categoryModal.style.display = 'none';
+});
+
+// NUEVO: Cerrar modal de categoría
+cancelCategoryBtn.addEventListener('click', () => {
+    categoryModal.style.display = 'none';
+});
+
+
+// ... (Pega aquí el resto de tu código de manejo de eventos para juegos)
 addGameBtn.addEventListener('click', () => {
     gameModalTitle.textContent = 'Añadir Nuevo Juego';
     gameForm.reset();
