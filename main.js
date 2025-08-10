@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const mysql = require('mysql2');
 const path = require('path');
 
-// --- 1. IMPORTAR MODELOS Y CONTROLADORES (RUTA CORREGIDA) ---
+// --- 1. IMPORTAR MODELOS Y CONTROLADORES ---
 const createGameModel = require('./src/models/gameModel.js');
 const setupGameController = require('./src/controllers/gameController.js');
 
@@ -26,13 +26,11 @@ connection.connect(err => {
 });
 
 // --- 2. INICIALIZAR MODELOS Y CONTROLADORES ---
-// Creamos una instancia del modelo de juegos, pasándole la conexión a la DB.
 const gameModel = createGameModel(connection);
-// Activamos el controlador de juegos, pasándole ipcMain y el modelo.
 setupGameController(ipcMain, gameModel);
 
 
-// --- Creación de Ventanas (Rutas actualizadas) ---
+// --- Creación de Ventanas ---
 function createLoginWindow() {
     const loginWindow = new BrowserWindow({
         width: 500, height: 600,
@@ -61,10 +59,7 @@ function createAdminDashboardWindow() {
 }
 
 
-// --- Lógica de Comunicación IPC (Ahora más limpia) ---
-
-// NOTA: Todos los ipcMain.on relacionados con juegos han sido eliminados de aquí
-// y ahora son manejados por 'gameController.js'.
+// --- Lógica de Comunicación IPC ---
 
 // REGISTRO DE CLIENTE
 ipcMain.on('registrar-cliente', (event, cliente) => {
@@ -132,8 +127,6 @@ ipcMain.on('logout-request', (event) => {
 
 
 // --- ESCUCHADORES PARA LA VISTA DEL CLIENTE ---
-// (Por ahora, estos se quedan aquí. En el futuro, podríamos crear
-// un 'reservaModel' y 'reservaController' para ellos).
 
 // OBTENER RESERVAS DE UN CLIENTE
 ipcMain.on('get-my-reservas', (event, clienteId) => {
@@ -172,6 +165,31 @@ ipcMain.on('cancel-reservation', (event, reservaId) => {
     connection.query(query, [reservaId], (err, result) => {
         if (err) { console.error('Error al cancelar la reserva:', err); return; }
         event.reply('reservation-cancelled');
+    });
+});
+
+
+// --- NUEVO ESCUCHADOR PARA EL PANEL DE ADMIN ---
+
+// OBTENER TODAS LAS RESERVAS PARA EL ADMIN
+ipcMain.on('get-all-reservas-admin', (event) => {
+    // Esta consulta une las 3 tablas para obtener toda la información necesaria
+    const query = `
+        SELECT 
+            r.id, r.fecha_reserva, r.hora_reserva, r.estado, r.pedido_comidas, r.pedido_bebidas,
+            c.nombre as nombre_cliente, 
+            j.nombre_juego 
+        FROM reservas r
+        JOIN clientes c ON r.cliente_id = c.id
+        JOIN juegos j ON r.juego_id = j.id
+        ORDER BY r.id DESC`;
+    
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al obtener todas las reservas para el admin:', err);
+            return;
+        }
+        event.reply('all-reservas-admin-response', results);
     });
 });
 
