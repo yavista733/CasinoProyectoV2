@@ -25,6 +25,7 @@
             <button id="tab-clientes" class="tab-btn py-2 px-4 font-semibold rounded-t-lg active-tab">Clientes</button>
             <button id="tab-reservas" class="tab-btn py-2 px-4 font-semibold rounded-t-lg">Reservas</button>
             <button id="tab-juegos" class="tab-btn py-2 px-4 font-semibold rounded-t-lg">Juegos</button>
+            <button id="tab-promociones" class="tab-btn py-2 px-4 font-semibold rounded-t-lg">Promociones</button> <!-- NUEVA PESTAÑA -->
         </nav>
     </div>
 
@@ -38,10 +39,8 @@
                     <tr class="bg-gray-700">
                         <th class="py-3 px-4 text-left">ID</th>
                         <th class="py-3 px-4 text-left">Nombre</th>
-                        <th class="py-3 px-4 text-left">DNI</th>
-                        <th class="py-3 px-4 text-left">Usuario</th>
                         <th class="py-3 px-4 text-left">Categoría</th>
-                        <th class="py-3 px-4 text-left">Acciones</th> <!-- NUEVA COLUMNA -->
+                        <th class="py-3 px-4 text-left">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="clientes-table-body"></tbody>
@@ -49,7 +48,6 @@
         </div>
     </div>
 
-    <!-- ... (El resto de las secciones: Reservas y Juegos, sin cambios) ... -->
     <!-- SECCIÓN RESERVAS -->
     <div id="content-reservas" class="tab-content">
         <h2 class="text-2xl font-bold mb-4">Historial de Todas las Reservas</h2>
@@ -70,7 +68,7 @@
             </table>
         </div>
     </div>
-
+    
     <!-- SECCIÓN JUEGOS -->
     <div id="content-juegos" class="tab-content">
         <div class="flex justify-between items-center mb-4">
@@ -93,14 +91,53 @@
         </div>
     </div>
 
-
-    <!-- MODALES -->
-    <!-- Modal para Juegos (sin cambios) -->
-    <div id="game-modal" class="modal">
-        <!-- ... (contenido del modal de juegos) ... -->
+    <!-- NUEVA SECCIÓN: PROMOCIONES -->
+    <div id="content-promociones" class="tab-content">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">Gestionar Promociones</h2>
+            <button id="add-promocion-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Promoción</button>
+        </div>
+        <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="py-3 px-4 text-left">ID</th>
+                        <th class="py-3 px-4 text-left">Nombre</th>
+                        <th class="py-3 px-4 text-left">Descripción</th>
+                        <th class="py-3 px-4 text-left">Fechas</th>
+                        <th class="py-3 px-4 text-left">Activa</th>
+                        <th class="py-3 px-4 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="promociones-table-body"></tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- NUEVO MODAL PARA CAMBIAR CATEGORÍA DE CLIENTE -->
+
+    <!-- MODALES -->
+    <!-- Modal de Juegos -->
+    <div id="game-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 id="game-modal-title" class="text-2xl font-bold mb-4 text-yellow-400">Añadir Juego</h3>
+            <form id="game-form">
+                <input type="hidden" id="game-id-input">
+                <div class="mb-4">
+                    <label for="nombre_juego" class="block text-sm font-medium">Nombre del Juego</label>
+                    <input type="text" id="nombre_juego" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required>
+                </div>
+                <div class="mb-6">
+                    <label for="descripcion" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="descripcion" rows="3" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"></textarea>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-game-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Modal de Categorías -->
     <div id="category-modal" class="modal">
         <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
             <h3 class="text-2xl font-bold mb-4 text-yellow-400">Cambiar Categoría</h3>
@@ -118,6 +155,60 @@
                     <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Guardar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL PARA AÑADIR/EDITAR PROMOCIÓN -->
+    <div id="promocion-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 id="promocion-modal-title" class="text-2xl font-bold mb-4 text-yellow-400">Añadir Promoción</h3>
+            <form id="promocion-form">
+                <input type="hidden" id="promocion-id-input">
+                <div class="mb-4">
+                    <label for="nombre_promocion" class="block text-sm font-medium">Nombre</label>
+                    <input type="text" id="nombre_promocion" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label for="descripcion_promocion" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="descripcion_promocion" rows="3" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label for="fecha_inicio" class="block text-sm font-medium">Fecha Inicio</label>
+                        <input type="text" id="fecha_inicio" placeholder="DD/MM/AAAA" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label for="fecha_fin" class="block text-sm font-medium">Fecha Fin</label>
+                        <input type="text" id="fecha_fin" placeholder="DD/MM/AAAA" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-promocion-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL PARA ASIGNAR PROMOCIÓN -->
+    <div id="assign-promocion-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4 text-yellow-400">Asignar Promoción</h3>
+            <form id="assign-promocion-form">
+                <input type="hidden" id="assign-client-id-input">
+                <p class="mb-4">Cliente: <span id="assign-client-name-modal" class="font-semibold"></span></p>
+                <div class="mb-6">
+                    <label for="assign-promocion-select" class="block text-sm font-medium mb-1">Seleccionar Promoción</label>
+                    <select id="assign-promocion-select" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                        <!-- Las opciones de promoción se cargarán aquí -->
+                    </select>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-assign-promocion-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Asignar</button>
+                </div>
+            </form>
+            <div id="assign-modal-mensaje" class="mt-4 text-center"></div>
         </div>
     </div>
 

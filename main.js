@@ -6,6 +6,8 @@ const path = require('path');
 // --- 1. IMPORTAR MODELOS Y CONTROLADORES ---
 const createGameModel = require('./src/models/gameModel.js');
 const setupGameController = require('./src/controllers/gameController.js');
+const createPromocionModel = require('./src/models/promocionModel.js'); // Nuevo
+const setupPromocionController = require('./src/controllers/promocionController.js'); // Nuevo
 
 // --- CREDENCIALES Y CONEXIÓN A DB ---
 const ADMIN_USER = 'admin';
@@ -28,6 +30,9 @@ connection.connect(err => {
 // --- 2. INICIALIZAR MODELOS Y CONTROLADORES ---
 const gameModel = createGameModel(connection);
 setupGameController(ipcMain, gameModel);
+
+const promocionModel = createPromocionModel(connection); // Nuevo
+setupPromocionController(ipcMain, promocionModel); // Nuevo
 
 
 // --- Creación de Ventanas ---
@@ -107,7 +112,7 @@ ipcMain.on('login-request', (event, credenciales) => {
     });
 });
 
-// OBTENER TODOS LOS CLIENTES (ACTUALIZADO CON JOIN)
+// OBTENER TODOS LOS CLIENTES
 ipcMain.on('get-all-clients', (event) => {
     const query = `
         SELECT 
@@ -196,7 +201,6 @@ ipcMain.on('get-all-reservas-admin', (event) => {
     });
 });
 
-// NUEVO: OBTENER TODAS LAS CATEGORÍAS
 ipcMain.on('get-all-categories', (event) => {
     const query = 'SELECT * FROM categorias_cliente ORDER BY id';
     connection.query(query, (err, results) => {
@@ -208,7 +212,6 @@ ipcMain.on('get-all-categories', (event) => {
     });
 });
 
-// NUEVO: ACTUALIZAR LA CATEGORÍA DE UN CLIENTE
 ipcMain.on('update-client-category', (event, data) => {
     const { clienteId, categoriaId } = data;
     const query = 'UPDATE clientes SET categoria_id = ? WHERE id = ?';
@@ -217,7 +220,7 @@ ipcMain.on('update-client-category', (event, data) => {
             console.error('Error al actualizar la categoría del cliente:', err);
             return;
         }
-        event.reply('client-updated'); // Avisar para que se refresque la lista de clientes
+        event.reply('client-updated');
     });
 });
 
