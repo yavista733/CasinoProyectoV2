@@ -8,8 +8,10 @@ const createGameModel = require('./src/models/gameModel.js');
 const setupGameController = require('./src/controllers/gameController.js');
 const createPromocionModel = require('./src/models/promocionModel.js');
 const setupPromocionController = require('./src/controllers/promocionController.js');
+const createRequerimientoModel = require('./src/models/requerimientoModel.js');
+const setupRequerimientoController = require('./src/controllers/requerimientoController.js');
 
-// --- CONEXIÓN A DB (SIN CAMBIOS) ---
+// --- CONEXIÓN A DB ---
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -25,15 +27,18 @@ connection.connect(err => {
     console.log('Conexión a la base de datos MySQL establecida.');
 });
 
-// --- INICIALIZAR MODELOS Y CONTROLADORES (SIN CAMBIOS) ---
+// --- 2. INICIALIZAR MODELOS Y CONTROLADORES ---
 const gameModel = createGameModel(connection);
 setupGameController(ipcMain, gameModel);
 
 const promocionModel = createPromocionModel(connection);
 setupPromocionController(ipcMain, promocionModel);
 
+const requerimientoModel = createRequerimientoModel(connection);
+setupRequerimientoController(ipcMain, requerimientoModel);
 
-// --- Creación de Ventanas (SIN CAMBIOS) ---
+
+// --- Creación de Ventanas ---
 function createLoginWindow() {
     const loginWindow = new BrowserWindow({
         width: 500, height: 600,
@@ -64,11 +69,10 @@ function createAdminDashboardWindow() {
 
 // --- Lógica de Comunicación IPC ---
 
-// INICIO DE SESIÓN (ACTUALIZADO PARA USAR LA TABLA 'administradores')
+// INICIO DE SESIÓN (ACTUALIZADO para enviar más datos del cliente)
 ipcMain.on('login-request', (event, credenciales) => {
     const { usuario, contrasena } = credenciales;
 
-    // 1. Primero, buscamos en la tabla de administradores
     const adminQuery = 'SELECT * FROM administradores WHERE usuario = ? AND contrasena = ?';
     connection.query(adminQuery, [usuario, contrasena], (err, adminResults) => {
         if (err) {
@@ -78,14 +82,11 @@ ipcMain.on('login-request', (event, credenciales) => {
         }
 
         if (adminResults.length > 0) {
-            // Si es un administrador, abrimos su panel
-            console.log('Login de administrador exitoso para:', usuario);
             createAdminDashboardWindow();
             BrowserWindow.fromWebContents(event.sender)?.close();
-            return; // Importante: detenemos la ejecución aquí
+            return;
         }
 
-        // 2. Si no es admin, buscamos en la tabla de clientes
         const clientQuery = 'SELECT * FROM clientes WHERE usuario = ? AND contrasena = ?';
         connection.query(clientQuery, [usuario, contrasena], (err, clientResults) => {
             if (err) {
@@ -95,22 +96,22 @@ ipcMain.on('login-request', (event, credenciales) => {
             }
 
             if (clientResults.length > 0) {
-                // Si es un cliente, abrimos su panel
-                console.log('Login de cliente exitoso para:', usuario);
-                const clientData = { id: clientResults[0].id, nombre: clientResults[0].nombre };
+                // Preparamos un objeto con toda la info que el dashboard necesita
+                const clientData = { 
+                    id: clientResults[0].id, 
+                    nombre: clientResults[0].nombre,
+                    telefono: clientResults[0].telefono,
+                    correo_electronico: clientResults[0].correo_electronico
+                };
                 createDashboardWindow(clientData);
                 BrowserWindow.fromWebContents(event.sender)?.close();
             } else {
-                // Si no se encontró en ninguna tabla, las credenciales son incorrectas
-                console.log('Intento de login fallido para:', usuario);
                 event.reply('login-response', { success: false, message: 'Usuario o contraseña incorrectos.' });
             }
         });
     });
 });
 
-
-// ... (El resto de tu código de main.js: registrar-cliente, get-all-clients, etc., se queda igual)
 // REGISTRO DE CLIENTE
 ipcMain.on('registrar-cliente', (event, cliente) => {
     const query = 'INSERT INTO clientes (nombre, dni, usuario, contrasena, fecha_nacimiento, telefono, correo_electronico) VALUES (?, ?, ?, ?, ?, ?, ?)';

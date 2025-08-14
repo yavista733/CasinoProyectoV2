@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Atlantic City Casino  - Dashboard</title>
+    <title>Casino Royale - Dashboard</title>
     <style>
         .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
         .modal-content { position: relative; margin: 10% auto; padding: 2rem; width: 90%; max-width: 500px; }
@@ -14,7 +14,10 @@
     <!-- BARRA SUPERIOR -->
     <div class="w-full p-4 flex justify-between items-center bg-gray-800 shadow-lg sticky top-0 z-20">
         <h1 id="welcome-message" class="text-xl font-bold text-yellow-400">¡Bienvenido!</h1>
-        <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+        <div>
+            <button id="support-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mr-4">Contactar Soporte</button>
+            <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+        </div>
     </div>
 
     <!-- CONTENIDO PRINCIPAL -->
@@ -30,16 +33,12 @@
             <!-- CARTA DE BEBIDAS Y LICORES -->
             <div>
                 <h2 class="text-3xl font-bold mb-6">Carta de Bebidas y Licores</h2>
-                <div id="menu-bebidas" class="bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
-                    <!-- Los items de bebidas se insertarán aquí dinámicamente -->
-                </div>
+                <div id="menu-bebidas" class="bg-gray-800 rounded-lg shadow-lg p-6 space-y-4"></div>
             </div>
             <!-- PLATOS TÍPICOS -->
             <div>
                 <h2 class="text-3xl font-bold mb-6">Platos Típicos</h2>
-                <div id="menu-platos" class="bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
-                    <!-- Los items de platos se insertarán aquí dinámicamente -->
-                </div>
+                <div id="menu-platos" class="bg-gray-800 rounded-lg shadow-lg p-6 space-y-4"></div>
             </div>
         </div>
         
@@ -67,15 +66,10 @@
     <div id="reserva-modal" class="modal">
         <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
             <h3 class="text-2xl font-bold mb-4 text-yellow-400">Confirmar Reserva</h3>
-            
-            <!-- RESUMEN DEL PEDIDO -->
             <div id="resumen-pedido" class="mb-4 p-4 bg-gray-700 rounded-lg">
                 <h4 class="text-lg font-semibold mb-2">Tu Pedido:</h4>
-                <div id="pedido-items" class="text-gray-300 space-y-1 max-h-40 overflow-y-auto">
-                    <!-- Items del pedido se mostrarán aquí -->
-                </div>
+                <div id="pedido-items" class="text-gray-300 space-y-1 max-h-40 overflow-y-auto"></div>
             </div>
-
             <form id="reserva-form">
                 <input type="hidden" id="juego-id-input">
                 <div class="mb-4">
@@ -92,6 +86,46 @@
                 </div>
             </form>
             <div id="modal-mensaje" class="mt-4 text-center"></div>
+        </div>
+    </div>
+
+    <!-- NUEVO MODAL PARA REQUERIMIENTOS (QUEJAS, ETC.) -->
+    <div id="requerimiento-modal" class="modal">
+        <div class="modal-content bg-gray-800 rounded-lg shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4 text-yellow-400">Enviar Requerimiento</h3>
+            <form id="requerimiento-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Nombre</label>
+                    <input type="text" id="req-nombre" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" disabled>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium">Correo</label>
+                        <input type="email" id="req-correo" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" disabled>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Teléfono</label>
+                        <input type="tel" id="req-telefono" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" disabled>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="req-tipo" class="block text-sm font-medium">Tipo de Requerimiento</label>
+                    <select id="req-tipo" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                        <option>Sugerencia</option>
+                        <option>Queja</option>
+                        <option>Reclamo</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="req-mensaje" class="block text-sm font-medium">Mensaje</label>
+                    <textarea id="req-mensaje" rows="4" class="w-full mt-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg" required></textarea>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-requerimiento-btn" class="bg-gray-600 hover:bg-gray-700 font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg">Enviar</button>
+                </div>
+            </form>
+            <div id="requerimiento-modal-mensaje" class="mt-4 text-center"></div>
         </div>
     </div>
 

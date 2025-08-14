@@ -21,6 +21,7 @@ const clientesTableBody = document.getElementById('clientes-table-body');
 const juegosTableBody = document.getElementById('juegos-table-body');
 const allReservasTableBody = document.getElementById('all-reservas-table-body');
 const promocionesTableBody = document.getElementById('promociones-table-body');
+const requerimientosTableBody = document.getElementById('requerimientos-table-body'); // Nuevo
 
 // Botones
 const addGameBtn = document.getElementById('add-game-btn');
@@ -177,6 +178,28 @@ function renderPromociones(promociones) {
     });
 }
 
+// NUEVA FUNCIÓN para renderizar Requerimientos
+function renderRequerimientos(requerimientos) {
+    requerimientosTableBody.innerHTML = '';
+    if (!requerimientos || requerimientos.length === 0) {
+        requerimientosTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No hay requerimientos de clientes.</td></tr>';
+        return;
+    }
+    requerimientos.forEach(req => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-gray-700';
+        row.innerHTML = `
+            <td class="py-2 px-4">${req.id}</td>
+            <td class="py-2 px-4">${req.nombre_cliente}</td>
+            <td class="py-2 px-4">${req.tipo}</td>
+            <td class="py-2 px-4 text-sm">${req.mensaje}</td>
+            <td class="py-2 px-4">${req.fecha_creacion}</td>
+            <td class="py-2 px-4 font-semibold">${req.estado}</td>
+        `;
+        requerimientosTableBody.appendChild(row);
+    });
+}
+
 
 // --- LÓGICA DE PESTAÑAS ---
 function switchTab(targetId) {
@@ -205,6 +228,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('get-all-reservas-admin');
     ipcRenderer.send('get-all-games-admin');
     ipcRenderer.send('get-all-promociones');
+    ipcRenderer.send('get-all-requerimientos'); // Nueva petición
     switchTab('clientes');
 });
 
@@ -214,6 +238,7 @@ ipcRenderer.on('all-clients-response', (event, clientes) => renderClientes(clien
 ipcRenderer.on('all-reservas-admin-response', (event, reservas) => renderAllReservas(reservas));
 ipcRenderer.on('all-games-admin-response', (event, juegos) => renderJuegos(juegos));
 ipcRenderer.on('all-promociones-response', (event, promociones) => renderPromociones(promociones));
+ipcRenderer.on('all-requerimientos-response', (event, requerimientos) => renderRequerimientos(requerimientos)); // Nuevo
 ipcRenderer.on('game-updated', () => ipcRenderer.send('get-all-games-admin'));
 ipcRenderer.on('client-updated', () => ipcRenderer.send('get-all-clients'));
 ipcRenderer.on('promocion-updated', () => ipcRenderer.send('get-all-promociones'));
@@ -365,7 +390,6 @@ promocionesTableBody.addEventListener('click', e => {
         const activa = target.getAttribute('data-activa') === '1';
         ipcRenderer.send('toggle-promocion-active', { id: promoId, activa: !activa });
     }
-    // Lógica para editar (similar a juegos)
 });
 
 cancelAssignPromocionBtn.addEventListener('click', () => assignPromocionModal.style.display = 'none');
