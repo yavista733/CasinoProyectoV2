@@ -6,12 +6,10 @@ const path = require('path');
 // --- 1. IMPORTAR MODELOS Y CONTROLADORES ---
 const createGameModel = require('./src/models/gameModel.js');
 const setupGameController = require('./src/controllers/gameController.js');
-const createPromocionModel = require('./src/models/promocionModel.js'); // Nuevo
-const setupPromocionController = require('./src/controllers/promocionController.js'); // Nuevo
+const createPromocionModel = require('./src/models/promocionModel.js');
+const setupPromocionController = require('./src/controllers/promocionController.js');
 
-// --- CREDENCIALES Y CONEXIÓN A DB ---
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
+// --- CONEXIÓN A DB (SIN CAMBIOS) ---
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -27,15 +25,15 @@ connection.connect(err => {
     console.log('Conexión a la base de datos MySQL establecida.');
 });
 
-// --- 2. INICIALIZAR MODELOS Y CONTROLADORES ---
+// --- INICIALIZAR MODELOS Y CONTROLADORES (SIN CAMBIOS) ---
 const gameModel = createGameModel(connection);
 setupGameController(ipcMain, gameModel);
 
-const promocionModel = createPromocionModel(connection); // Nuevo
-setupPromocionController(ipcMain, promocionModel); // Nuevo
+const promocionModel = createPromocionModel(connection);
+setupPromocionController(ipcMain, promocionModel);
 
 
-// --- Creación de Ventanas ---
+// --- Creación de Ventanas (SIN CAMBIOS) ---
 function createLoginWindow() {
     const loginWindow = new BrowserWindow({
         width: 500, height: 600,
@@ -66,6 +64,53 @@ function createAdminDashboardWindow() {
 
 // --- Lógica de Comunicación IPC ---
 
+// INICIO DE SESIÓN (ACTUALIZADO PARA USAR LA TABLA 'administradores')
+ipcMain.on('login-request', (event, credenciales) => {
+    const { usuario, contrasena } = credenciales;
+
+    // 1. Primero, buscamos en la tabla de administradores
+    const adminQuery = 'SELECT * FROM administradores WHERE usuario = ? AND contrasena = ?';
+    connection.query(adminQuery, [usuario, contrasena], (err, adminResults) => {
+        if (err) {
+            console.error('Error en la consulta de admin:', err);
+            event.reply('login-response', { success: false, message: 'Error del servidor.' });
+            return;
+        }
+
+        if (adminResults.length > 0) {
+            // Si es un administrador, abrimos su panel
+            console.log('Login de administrador exitoso para:', usuario);
+            createAdminDashboardWindow();
+            BrowserWindow.fromWebContents(event.sender)?.close();
+            return; // Importante: detenemos la ejecución aquí
+        }
+
+        // 2. Si no es admin, buscamos en la tabla de clientes
+        const clientQuery = 'SELECT * FROM clientes WHERE usuario = ? AND contrasena = ?';
+        connection.query(clientQuery, [usuario, contrasena], (err, clientResults) => {
+            if (err) {
+                console.error('Error en la consulta de cliente:', err);
+                event.reply('login-response', { success: false, message: 'Error del servidor.' });
+                return;
+            }
+
+            if (clientResults.length > 0) {
+                // Si es un cliente, abrimos su panel
+                console.log('Login de cliente exitoso para:', usuario);
+                const clientData = { id: clientResults[0].id, nombre: clientResults[0].nombre };
+                createDashboardWindow(clientData);
+                BrowserWindow.fromWebContents(event.sender)?.close();
+            } else {
+                // Si no se encontró en ninguna tabla, las credenciales son incorrectas
+                console.log('Intento de login fallido para:', usuario);
+                event.reply('login-response', { success: false, message: 'Usuario o contraseña incorrectos.' });
+            }
+        });
+    });
+});
+
+
+// ... (El resto de tu código de main.js: registrar-cliente, get-all-clients, etc., se queda igual)
 // REGISTRO DE CLIENTE
 ipcMain.on('registrar-cliente', (event, cliente) => {
     const query = 'INSERT INTO clientes (nombre, dni, usuario, contrasena, fecha_nacimiento, telefono, correo_electronico) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -85,30 +130,6 @@ ipcMain.on('registrar-cliente', (event, cliente) => {
             return;
         }
         event.reply('registro-respuesta', { success: true, message: '¡Cliente registrado con éxito!' });
-    });
-});
-
-// INICIO DE SESIÓN
-ipcMain.on('login-request', (event, credenciales) => {
-    const { usuario, contrasena } = credenciales;
-    if (usuario === ADMIN_USER && contrasena === ADMIN_PASS) {
-        createAdminDashboardWindow();
-        BrowserWindow.fromWebContents(event.sender)?.close();
-        return;
-    }
-    const query = 'SELECT * FROM clientes WHERE usuario = ? AND contrasena = ?';
-    connection.query(query, [usuario, contrasena], (err, results) => {
-        if (err) {
-            event.reply('login-response', { success: false, message: 'Error del servidor.' });
-            return;
-        }
-        if (results.length > 0) {
-            const clientData = { id: results[0].id, nombre: results[0].nombre };
-            createDashboardWindow(clientData);
-            BrowserWindow.fromWebContents(event.sender)?.close();
-        } else {
-            event.reply('login-response', { success: false, message: 'Usuario o contraseña incorrectos.' });
-        }
     });
 });
 
